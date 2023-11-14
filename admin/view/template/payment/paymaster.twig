@@ -1,0 +1,213 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-payment" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1><i class="fa fa-credit-card"></i> {{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_edit }}</div>
+      <div class="card-body">
+        <form id="form-payment" action="{{ save }}" method="post" data-oc-toggle="ajax">
+          
+          <div class="row mb-3">
+            <label for="input-status" class="col-sm-2 col-form-label">{{ status_label }}</label>
+            <div class="col-sm-10">
+              <div class="form-check form-switch form-switch-lg">
+                <input type="hidden" name="payment_paymaster_status" value="0"/>
+                <input type="checkbox" name="payment_paymaster_status" value="1" id="input-status" class="form-check-input"{% if payment_paymaster_status %} checked{% endif %}/>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mb-3 required">
+            <label for="input-base-address" class="col-sm-2 col-form-label">{{ base_address_label }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_paymaster_base_address" value="{{ payment_paymaster_base_address }}" placeholder="{{ base_address_label }}" id="input-base-address" class="form-control"/>
+            </div>
+          </div>
+          
+          <div class="row mb-3 required">
+            <label for="input-token" class="col-sm-2 col-form-label">{{ token_label }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_paymaster_token" value="{{ payment_paymaster_token }}" placeholder="{{ token_label }}" id="input-token" class="form-control"/>
+              <span>{{ token_descr }}</span>
+            </div>
+          </div>
+
+          <div class="row mb-3 required">
+            <label for="input-merchant-id" class="col-sm-2 col-form-label">{{ merchant_id_label }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_paymaster_merchant_id" value="{{ payment_paymaster_merchant_id }}" placeholder="{{ merchant_id_label }}" id="input-merchant-id" class="form-control"/>
+              <span>{{ merchant_id_descr }}</span>
+            </div>
+          </div>
+          
+          <div class="row mb-3 required">
+            <label for="input-service-name" class="col-sm-2 col-form-label">{{ payment_service_name_label }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_paymaster_service_name" value="{{ payment_paymaster_service_name }}" placeholder="{{ payment_service_name_label }}" id="input-service-name" class="form-control"/>
+              <span>{{ payment_service_name_descr }}</span>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label for="select-done-status" class="col-sm-2 col-form-label">{{ payment_done_status_label }}</label>
+            <div class="col-sm-10">
+              <select name="payment_paymaster_done_status_id" id="select-done-status" class="form-select">
+                {% for order_status in order_statuses %}
+                  <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_paymaster_done_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          {% if (payment_paymaster_send_receipt_data) %}
+          
+          <div class="row mb-3">
+            <input type="hidden" name="payment_paymaster_send_receipt_data" value="{{ payment_paymaster_send_receipt_data }}" />
+            <label class="col-sm-2 col-form-label">{{ online_sales_register_label }}</label>
+            <div class="col-sm-10">
+              <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">{{ tax_rates_label }}</label>
+                <div class="col-sm-10">
+                  <table class="table table-bordered">
+                    <thead>
+                    	<tr>
+                    	  <td>{{ tax_class_text }}</td>
+                    	  <td>{{ vat_rate_text }}</td>
+                  	  </tr>
+                    </thead>
+                    <tbody>
+                    {% set row_index = 0 %}
+                    {% for tax_class in tax_classes %}
+                      <tr>
+                        <td>
+                          <input type="hidden" name="payment_paymaster_tax_rules[{{ row_index }}][tax_class_id]" value="{{ tax_class['tax_class_id'] }}" />
+                          <label for="select-tax-rate-{{ tax_class['tax_class_id'] }}">{{ tax_class['title'] }}</label>
+                        </td>
+                        <td>
+                          <select id="select-tax-rate-{{ tax_class['tax_class_id'] }}" name="payment_paymaster_tax_rules[{{ row_index }}][vat_type]" class="form-select">
+                          {% for tax_rule in tax_rules %}
+                            <option {{ (tax_rule['value'] == payment_paymaster_tax_rules|filter(v => v['tax_class_id'] == tax_class['tax_class_id'])|first['vat_type']) ? 'selected' : '' }} value="{{ tax_rule['value'] }}">{{ tax_rule['name'] }}</option>
+                          {% endfor %}
+                          </select>
+                        </td>
+                      </tr>
+                    {% set row_index = row_index + 1 %}
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="select-tax-rate-default" class="col-sm-2 col-form-label">{{ default_vat_type_label }}</label>
+                <div class="col-sm-10">
+                  <select id="select-tax-rate-default" name="payment_paymaster_default_vat_type" class="form-select">
+                  {% for tax_rule in tax_rules %}
+                    <option {{ (tax_rule['value'] == payment_paymaster_default_vat_type) ? 'selected' : '' }} value="{{ tax_rule['value'] }}">{{ tax_rule['name'] }}</option>
+                  {% endfor %}
+                  </select>
+                  <span>{{ default_vat_type_descr }}</span>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="select-payment-subject" class="col-sm-2 col-form-label">{{ payment_subject_label }}</label>
+                <div class="col-sm-10">
+                  <select id="select-payment-subject" name="payment_paymaster_payment_subject" class="form-select">
+                  {% for payment_subject in payment_subjects %}
+                    <option {{ (payment_subject['value'] == payment_paymaster_payment_subject) ? 'selected' : '' }} value="{{ payment_subject['value'] }}">{{ payment_subject['name'] }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="select-payment-method" class="col-sm-2 col-form-label">{{ payment_method_label }}</label>
+                <div class="col-sm-10">
+                  <select id="select-payment-method" name="payment_paymaster_payment_method" class="form-select">
+                  {% for payment_method in payment_methods %}
+                    <option {{ (payment_method['value'] == payment_paymaster_payment_method) ? 'selected' : '' }} value="{{ payment_method['value'] }}">{{ payment_method['name'] }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="select-payment-subject-for-shipping" class="col-sm-2 col-form-label">{{ payment_subject_for_shipping_label }}</label>
+                <div class="col-sm-10">
+                  <select id="select-payment-subject-for-shipping" name="payment_paymaster_payment_subject_for_shipping" class="form-select">
+                  {% for payment_subject in payment_subjects %}
+                    <option {{ (payment_subject['value'] == payment_paymaster_payment_subject_for_shipping) ? 'selected' : '' }} value="{{ payment_subject['value'] }}">{{ payment_subject['name'] }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="select-payment-method-for-shipping" class="col-sm-2 col-form-label">{{ payment_method_for_shipping_label }}</label>
+                <div class="col-sm-10">
+                  <select id="select-payment-method-for-shipping" name="payment_paymaster_payment_method_for_shipping" class="form-select">
+                  {% for payment_method in payment_methods %}
+                    <option {{ (payment_method['value'] == payment_paymaster_payment_method_for_shipping) ? 'selected' : '' }} value="{{ payment_method['value'] }}">{{ payment_method['name'] }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          {% endif %}
+
+          <div class="row mb-3">
+            <label for="select-geo-zone" class="col-sm-2 col-form-label">{{ geo_zone_label }}</label>
+            <div class="col-sm-10">
+              <select name="payment_paymaster_geo_zone_id" id="select-geo-zone" class="form-select">
+                <option value="0">{{ text_all_zones }}</option>
+                {% for geo_zone in geo_zones %}
+                  <option value="{{ geo_zone.geo_zone_id }}"{% if geo_zone.geo_zone_id == payment_paymaster_geo_zone_id %} selected="selected"{% endif %}>{{ geo_zone.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label for="select-paymaster_log" class="col-sm-2 col-form-label">{{ log_label }}</label>
+            <div class="col-sm-10">
+              <select name="payment_paymaster_log" id="select-paymaster_log" class="form-select">
+                {% if (payment_paymaster_log) %}
+                  <option value="1" selected="selected">{{ text_enabled }}</option>
+                  <option value="0">{{ text_disabled }}</option>
+                {% else %}
+                  <option value="1">{{ text_enabled }}</option>
+                  <option value="0" selected="selected">{{ text_disabled }}</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <label for="input-sort-order" class="col-sm-2 col-form-label">{{ sort_order_label }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_paymaster_sort_order" value="{{ payment_paymaster_sort_order }}" placeholder="{{ sort_order_label }}" id="input-sort-order" class="form-control"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}

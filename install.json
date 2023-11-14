@@ -1,0 +1,9 @@
+{
+  "name": "PayMaster",
+  "version": "1.0",
+  "author": "PayMaster",
+  "link": "",
+  "base_service_url": "",
+  "display_service_name": "",
+  "send_receipt_data": "0"
+}
